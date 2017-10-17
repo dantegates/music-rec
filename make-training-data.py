@@ -120,7 +120,7 @@ def _filter_input_files(files):
 
 if __name__ == '__main__':
     print('found %s files total' % len(FILES))
-    files = _filter_input_files(FILES[1000:])
+    files = _filter_input_files(FILES[3000:])
     print('processing %s files' % len(files))
     create_training_data(files)
 
