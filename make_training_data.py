@@ -100,6 +100,8 @@ def create_training_data(files):
             failures.append((file, err))
             with open(SKIPFILE, 'a') as f:
                 f.write('%s\n' % file)
+            with open(FAILFILE, 'a') as f:
+                f.write('%s: %s\n' % (err, file))
         except ValueError as err:
             skipped += 1
             failures.append((file, err))
@@ -110,7 +112,6 @@ def create_training_data(files):
             successes.append(file)
             with open(SUCCESSFILE, 'a') as f:
                 f.write('%s\n' % file)
-
 
 def _create_training_data(file):
     f = _mp3_hook(file) if file.endswith('.mp3') else file
@@ -128,7 +129,6 @@ def _create_training_data(file):
             raise InvalidShapeError('Unexpected feature shape: %s != %s'
                                     % (feature.shape, EXPECTED_SHAPE))
 
-
 def _filter_input_files(files):
     skip = set()
     with open(SUCCESSFILE) as f:
@@ -139,11 +139,13 @@ def _filter_input_files(files):
     files = [f for f in files if _valid_size(f)]
     return files
 
-
-if __name__ == '__main__':
+def main():
     with open(FAILFILE, 'w'): pass
     print('found %s files total' % len(FILES))
     files = _filter_input_files(FILES)
     print('processing %s files' % len(files))
-    create_training_data(files)
+    create_training_data(files)    
 
+
+if __name__ == '__main__':
+    main()
