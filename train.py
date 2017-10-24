@@ -6,9 +6,10 @@ from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 
+import config as cf
 
-input_length = 8320
-batch_size = 250
+
+batch_size = 125
 epochs = 100
 
 files = list(glob.glob('/home/dante_gates/repos/music-rec/data/train/*.npy'))
@@ -20,7 +21,7 @@ val_steps = int(test_size / batch_size)
 
 
 
-def batch_gen(filenames, n_features=8320, batch_size=30):
+def batch_gen(filenames, n_features=cf.EXPECTED_SHAPE[0], batch_size=30):
     n = 0
     batch = np.zeros((batch_size, n_features))
     for i, f in enumerate(filenames, start=1):
@@ -42,28 +43,32 @@ test_gen = repeat_generator(partial(batch_gen, test))
 
 
 ae = Sequential([
-        Dropout(0.2, input_shape=(input_length,)),
-        Dense(2**13),
-        Activation('relu'),
-        Dense(2**11),
-        Activation('relu'),
+        Dense(2**10, input_shape=cf.EXPECTED_SHAPE),
+        Activation('sigmoid'),
         Dense(2**9),
-        Activation('relu'),
-#        Dense(2**8),
-#        Activation('sigmoid'),
-#        Dense(2**9),
-#        Activation('relu'),
-        Dense(2**11),
-        Activation('relu'),
-        Dense(2**13),
-        Activation('relu'),
-        Dense(input_length),
+        Activation('sigmoid'),
+        Dense(2**8),
+        Activation('sigmoid'),
+        Dense(2**7),
+        Activation('sigmoid'),
+        Dense(2**6),
+        Activation('sigmoid'),
+        Dense(2**7),
+        Activation('sigmoid'),
+        Dense(2**8),
+        Activation('sigmoid'),
+        Dense(2**9),
+        Activation('sigmoid'),
+        Dense(2**10),
+        Activation('sigmoid'),
+        Dense(cf.EXPECTED_SHAPE[0]),
+        Activation('sigmoid')
     ])
-ae.compile(optimizer='adadelta', loss='binary_crossentropy')
+ae.compile(optimizer='adadelta', loss='mean_squared_error')
 
 ae.fit_generator(train_gen, train_steps, validation_data=test_gen,
                         validation_steps=val_steps, epochs=epochs)
 
-
+ae.save('model.h5')
 
 

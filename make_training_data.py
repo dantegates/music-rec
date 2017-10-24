@@ -8,23 +8,7 @@ import numpy as np
 import pydub
 import scipy.io
 
-# configs
-N_CLIPS = 20       # number of samples per song
-WINDOW_LENGTH = 6  # length in seconds of sample
-NFFT = 2**12       # determines frequency bins
-DESIRED_SAMPLE_RATE = 44100  # in Hz
-MAXSIZE = 40                 # in megabytes
-MUSIC_DIR = '/home/dante_gates/music/Music'
-OUTPUT_DIR = '/home/dante_gates/repos/music-rec/data/train'
-SUCCESSFILE = 'success.txt'
-FAILFILE = 'failed.txt'
-SKIPFILE = 'skip.txt'
-
-# computed configs
-EXPECTED_SHAPE = ((NFFT / 2) + 1,)
-FILES = glob.glob('{}/**/.wav'.format(MUSIC_DIR), recursive=True) \
-      + glob.glob('{}/**/*mp3'.format(MUSIC_DIR), recursive=True)
-MEGABYTE = 2**20
+import config as cf
 
 
 class UnreadableMP3Error(ValueError): pass
@@ -67,20 +51,26 @@ def _read_wav(f):
     return sr, audio
 
 def _make_features(sr, audio):
-    window_length = sr * WINDOW_LENGTH
+    window_length = sr * cf.WINDOW_LENGTH
     n_samples = audio.shape[0]
-    samples = random.sample(list(range(n_samples - window_length)), k=N_CLIPS)
+    samples = random.sample(list(range(n_samples - window_length)), k=cf.N_CLIPS)
     output = []
     for clip_begin in samples:
         clip = audio[clip_begin:clip_begin+window_length]
-        *_, S = scipy.signal.spectrogram(clip, sr, nfft=NFFT)
-        output.append(S.mean(axis=1))
+        *_, S = scipy.signal.spectrogram(clip, sr, nfft=cf.NFFT)
+        mean = S.mean(axis=1)
+        min_, max_ = mean.min(), mean.max()
+        if min_ != max_:
+            features = (mean - min_) / (max_ - min_)
+        else:
+            features = np.ones(mean.shape) / 2
+        output.append(features)
     return output
 
 def _valid_size(f):
     """Return size of `f` in megabytes."""
-    size = os.path.getsize(f) / MEGABYTE
-    return size <= MAXSIZE
+    size = os.path.getsize(f) / cf.MEGABYTE
+    return size <= cf.MAXSIZE
 
 def create_training_data(files):
     successes = []
@@ -88,12 +78,20 @@ def create_training_data(files):
     success = 0
     skipped = 0
     msg = ''
+    report = ''
+    ttl = len(files)
+    msg = '\r{remain} files remain. {complete} completed (success={s}, fail={f}). Currently processing {file}'
     for file in files:
+        n_processed = success + skipped
         try:
-            print('\r', ' ' * len(msg), end='', flush=True)
-            msg = '\r%s files processed. %s skipped. Currently processing %s' \
-                  % (success, skipped, os.path.basename(file))
-            print(msg, end='', flush=True)
+            print('\r', ' ' * len(report), end='', flush=True)
+            report = msg.format(
+                remain=ttl - n_processed,
+                complete=n_processed,
+                s=success,
+                f=skipped,
+                file=os.path.basename(file))
+            print(report, end='', flush=True)
             _create_training_data(file)
         except (UnreadableMP3Error, InvalidSampleRateError) as err:
             skipped += 1
@@ -116,33 +114,37 @@ def create_training_data(files):
 def _create_training_data(file):
     f = _mp3_hook(file) if file.endswith('.mp3') else file
     sr, audio = _read_wav(f)
-    if sr != DESIRED_SAMPLE_RATE:
+    if sr != cf.DESIRED_SAMPLE_RATE:
         raise InvalidSampleRateError('invalid sample rate: %s' % sr)
     features = _make_features(sr, audio)
     basename = os.path.basename(file)
     for i, feature in enumerate(features, start=1):
-        if feature.shape == EXPECTED_SHAPE:
+        if feature.shape == cf.EXPECTED_SHAPE:
             saveto = '%s - sample %s.npy' % (basename, i)
-            saveto = os.path.join(OUTPUT_DIR, saveto)
+            saveto = os.path.join(cf.OUTPUT_DIR, saveto)
             np.save(saveto, feature)
         else:
             raise InvalidShapeError('Unexpected feature shape: %s != %s'
-                                    % (feature.shape, EXPECTED_SHAPE))
+                                    % (feature.shape, cf.EXPECTED_SHAPE))
 
 def _filter_input_files(files):
     skip = set()
-    with open(SUCCESSFILE) as f:
+    with open(cf.SUCCESSFILE) as f:
         skip |= {L for L in f.read().split('\n')}
-    with open(SKIPFILE) as f:
+    with open(cf.SKIPFILE) as f:
         skip |= {L for L in f.read().split('\n')}
     files = (f for f in files if not f in skip)
     files = [f for f in files if _valid_size(f)]
     return files
 
 def main():
-    with open(FAILFILE, 'w'): pass
-    print('found %s files total' % len(FILES))
-    files = _filter_input_files(FILES)
+    if not os.path.exists(cf.SUCCESSFILE):
+        with open(cf.SUCCESSFILE, 'w'): pass
+    if not os.path.exists(cf.SKIPFILE):
+        with open(cf.SKIPFILE, 'w'): pass
+    with open(cf.FAILFILE, 'w'): pass
+    print('found %s files total' % len(cf.FILES))
+    files = _filter_input_files(cf.FILES)
     print('processing %s files' % len(files))
     create_training_data(files)    
 
