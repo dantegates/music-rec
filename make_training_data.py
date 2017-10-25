@@ -96,19 +96,19 @@ def create_training_data(files):
         except (UnreadableMP3Error, InvalidSampleRateError) as err:
             skipped += 1
             failures.append((file, err))
-            with open(SKIPFILE, 'a') as f:
+            with open(cf.SKIPFILE, 'a') as f:
                 f.write('%s\n' % file)
-            with open(FAILFILE, 'a') as f:
+            with open(cf.FAILFILE, 'a') as f:
                 f.write('%s: %s\n' % (err, file))
         except ValueError as err:
             skipped += 1
             failures.append((file, err))
-            with open(FAILFILE, 'a') as f:
+            with open(cf.FAILFILE, 'a') as f:
                 f.write('%s: %s\n' % (err, file))
         else:
             success += 1
             successes.append(file)
-            with open(SUCCESSFILE, 'a') as f:
+            with open(cf.SUCCESSFILE, 'a') as f:
                 f.write('%s\n' % file)
 
 def _create_training_data(file):
