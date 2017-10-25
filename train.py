@@ -20,7 +20,6 @@ train_steps = int(train_size / batch_size)
 val_steps = int(test_size / batch_size)
 
 
-
 def batch_gen(filenames, n_features=cf.EXPECTED_SHAPE[0], batch_size=30):
     n = 0
     batch = np.zeros((batch_size, n_features))
@@ -40,6 +39,9 @@ def repeat_generator(g):
 
 train_gen = repeat_generator(partial(batch_gen, train))
 test_gen = repeat_generator(partial(batch_gen, test))
+
+def save_model(model):
+    model.save('model.h5')
 
 
 ae = Sequential([
@@ -66,9 +68,18 @@ ae = Sequential([
     ])
 ae.compile(optimizer='adadelta', loss='mean_squared_error')
 
-ae.fit_generator(train_gen, train_steps, validation_data=test_gen,
-                        validation_steps=val_steps, epochs=epochs)
+def main():
+    save = False
+    try:
+        ae.fit_generator(train_gen, train_steps, validation_data=test_gen,
+                         validation_steps=val_steps, epochs=epochs)
+    except KeyboardInterrupt:
+        save = input('save model? (y/n):') == 'y'
+    else:
+        save = True
+    if save:
+        ae.save('model.h5')
 
-ae.save('model.h5')
 
-
+if __name__ == '__main__':
+    main()
