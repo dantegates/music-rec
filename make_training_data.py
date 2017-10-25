@@ -15,6 +15,7 @@ class UnreadableMP3Error(ValueError): pass
 class InvalidSampleRateError(ValueError): pass
 class InvalidShapeError(ValueError): pass
 class InvalidPCMError(ValueError): pass
+class InvalidFeatureError(ValueError): pass
 
 
 def _mp3_hook(f):
@@ -50,6 +51,10 @@ def _read_wav(f):
         audio = _down_mix(audio)
     return sr, audio
 
+def _validate_features(arr):
+    if not (arr >= 0).all() and (arr <= 1).all():
+        raise InvalidFeatureError('features not scaled to [0, 1]: %s' % arr)
+
 def _make_features(sr, audio):
     window_length = sr * cf.WINDOW_LENGTH
     n_samples = audio.shape[0]
@@ -58,12 +63,16 @@ def _make_features(sr, audio):
     for clip_begin in samples:
         clip = audio[clip_begin:clip_begin+window_length]
         *_, S = scipy.signal.spectrogram(clip, sr, nfft=cf.NFFT)
-        mean = S.mean(axis=1)
-        min_, max_ = mean.min(), mean.max()
-        if min_ != max_:
-            features = (mean - min_) / (max_ - min_)
+        S_mean = S.mean(axis=1)
+        min_S_mean, max_S_mean = S_mean.min(), S_mean.max()
+        # be careful to handle divide by zero errors here
+        if min_S_mean != max_S_mean:
+            features = (S_mean - min_S_mean) / (max_S_mean - min_S_mean)
+        elif max_S_mean != 0:
+            features = S_mean / max_S_mean
         else:
-            features = mean / max_
+            features = S_mean
+        _validate_features(features)
         output.append(features)
     return output
 
