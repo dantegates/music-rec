@@ -63,7 +63,7 @@ def _make_features(sr, audio):
         if min_ != max_:
             features = (mean - min_) / (max_ - min_)
         else:
-            features = np.ones(mean.shape) / 2
+            features = mean / max_
         output.append(features)
     return output
 
