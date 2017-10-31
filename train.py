@@ -14,7 +14,7 @@ batch_size = 125
 epochs = 100
 
 files = [os.path.join(cf.TRAIN_DIR, f) for f in os.listdir(cf.TRAIN_DIR)]
-train, test = train_test_split(files, test_size=0.2)
+train, test = train_test_split(files, test_size=0.2, random_state=0)
 train_size = len(train)
 test_size = len(test)
 train_steps = int(train_size / batch_size)
