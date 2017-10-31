@@ -1,0 +1,7 @@
+*.txt
+*.log
+*.h5
+*.wav
+*.ipynb_checkpoints*
+*__pycache__*
+data/
