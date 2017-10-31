@@ -23,7 +23,7 @@ def _find_start_stop(sr, min_hz, max_hz, nfft):
     f, *_ = scipy.signal.spectrogram(np.random.uniform(size=sr), sr, nfft=nfft)
     return abs(f - min_hz).argmin(), abs(f - max_hz).argmin()
 
-START, STOP = _find_start_stop(DESIRED_SAMPLE_RATE, MIN_HZ, MAX_HZ, NFFT)
+MIN_FQ_BIN, MAX_FQ_BIN = _find_start_stop(DESIRED_SAMPLE_RATE, MIN_HZ, MAX_HZ, NFFT)
 EXPECTED_SHAPE = (STOP - START,)
 FILES = glob.glob('{}/**/.wav'.format(MUSIC_DIR), recursive=True) \
       + glob.glob('{}/**/*mp3'.format(MUSIC_DIR), recursive=True)

@@ -13,9 +13,9 @@ class InvalidShapeError(ValueError): pass
 class InvalidFeatureError(ValueError): pass
     
 
-def make_feature(audio, sr, nfft):
+def make_feature(audio, sr, nfft, min_fq_bin=0, max_fq_bin=-1):
     *_, Sxx = scipy.signal.spectrogram(audio, sr, nfft=cf.NFFT)
-    X = Sxx.mean(axis=1)
+    X = Sxx[min_fq_bin:max_fq_bin].mean(axis=1)
     mn, mx = X.min(), X.max()
     # be careful to handle divide by zero errors here
     if mn != mx:
@@ -24,7 +24,6 @@ def make_feature(audio, sr, nfft):
         X = X / mx
     else:
         X = X
-    X = X[cf.START:cf.STOP]
     return X
 
 def _validate_features(arr):
@@ -38,7 +37,7 @@ def _make_features(sr, audio):
     output = []
     for clip_begin in samples:
         clip = audio[clip_begin:clip_begin+window_length]
-        feature = make_feature(clip, sr, cf.NFFT)
+        feature = make_feature(clip, sr, cf.NFFT, cf.MIN_FQ_BIN, cf.MAX_FQ_BIN)
         _validate_features(feature)
         output.append(feature)
     return output
