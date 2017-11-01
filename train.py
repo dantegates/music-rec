@@ -1,5 +1,6 @@
 import itertools
 import os
+import shutil
 
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -11,7 +12,7 @@ import config as cf
 
 
 batch_size = 125
-epochs = 100
+epochs = 25
 
 files = [os.path.join(cf.TRAIN_DIR, f) for f in os.listdir(cf.TRAIN_DIR)]
 train, test = train_test_split(files, test_size=0.2, random_state=0)
@@ -73,7 +74,11 @@ def get_model():
 def main():
     save = False
     load_model = input('use loaded model? (y/n):') == 'y'
-    ae = keras.models.load_model(cf.MODEL_PATH) if load_model else get_model()
+    if load_model:
+        ae = keras.models.load_model(cf.MODEL_PATH)
+        shutil.copy(cf.MODEL_PATH, cf.MODEL_PATH + '.bak')
+    else:
+        ae = get_model()
     try:
         ae.fit_generator(train_gen, train_steps, validation_data=test_gen,
                          validation_steps=val_steps, epochs=epochs)
