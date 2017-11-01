@@ -39,7 +39,7 @@ def _make_features(sr, audio):
         clip = audio[clip_begin:clip_begin+window_length]
         feature = make_feature(clip, sr, cf.NFFT, cf.MIN_FQ_BIN, cf.MAX_FQ_BIN)
         _validate_features(feature)
-        output.append(feature)
+        output.append((feature, clip_begin // sr)
     return output
 
 def create_training_data(files):
@@ -82,9 +82,9 @@ def _create_training_data(file):
         raise InvalidSampleRateError('invalid sample rate: %s' % sr)
     features = _make_features(sr, audio)
     basename = os.path.basename(file)
-    for i, feature in enumerate(features, start=1):
+    for feature, clip_begin in features:
         if feature.shape == cf.EXPECTED_SHAPE:
-            saveto = '%s - sample %s.npy' % (basename, i)
+            saveto = '%s - %s sec.npy' % (basename, clip_begin)
             saveto = os.path.join(cf.TRAIN_DIR, saveto)
             np.save(saveto, feature)
         else:
