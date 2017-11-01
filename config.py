@@ -13,7 +13,7 @@ MIN_HZ = 20
 MAX_HZ = 2000
 MUSIC_DIR = '/home/dante_gates/music/Music'
 TRAIN_DIR = '/home/dante_gates/repos/music-rec/data/train2'
-MODEL_PATH = 'model.h5'
+MODEL_PATH = 'autoencoder.h5'
 SUCCESSFILE = 'success.txt'
 FAILFILE = 'failed.txt'
 SKIPFILE = 'skip.txt'
@@ -24,6 +24,6 @@ def _find_start_stop(sr, min_hz, max_hz, nfft):
     return abs(f - min_hz).argmin(), abs(f - max_hz).argmin()
 
 MIN_FQ_BIN, MAX_FQ_BIN = _find_start_stop(DESIRED_SAMPLE_RATE, MIN_HZ, MAX_HZ, NFFT)
-EXPECTED_SHAPE = (STOP - START,)
+EXPECTED_SHAPE = (MAX_FQ_BIN - MIN_FQ_BIN,)
 FILES = glob.glob('{}/**/.wav'.format(MUSIC_DIR), recursive=True) \
       + glob.glob('{}/**/*mp3'.format(MUSIC_DIR), recursive=True)

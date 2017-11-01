@@ -1,3 +1,4 @@
+import collections
 import io
 import os
 
@@ -67,3 +68,12 @@ def read_audio(f, downmix):
     if downmix and len(audio.shape) == 2:
         audio = _down_mix(audio)
     return sr, audio
+
+MetaData = collections.namedtuple('MetaData', 'artist,album,track')
+def get_meta_data(f):
+    try:
+        info = pydub.utils.mediainfo(f)['TAG']
+    except Exception:
+        pass
+    artist, album, track = info['artist'], info['album'], info['title']
+    return MetaData(artist, album, track)
