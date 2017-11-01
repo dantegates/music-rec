@@ -1,6 +1,10 @@
 import glob
+import os
+
 import numpy as np
 import scipy.signal
+
+_dir = os.path.dirname(__file__)
 
 # boilerplate
 N_CLIPS = 20       # number of samples per song
@@ -11,12 +15,12 @@ DOWNMIX = True
 MAXSIZE = 40                 # in megabytes
 MIN_HZ = 20
 MAX_HZ = 2000
-MUSIC_DIR = '/home/dante_gates/music/Music'
-TRAIN_DIR = '/home/dante_gates/repos/music-rec/data/train2'
-MODEL_PATH = 'autoencoder.h5'
-SUCCESSFILE = 'success.txt'
-FAILFILE = 'failed.txt'
-SKIPFILE = 'skip.txt'
+MUSIC_DIR = os.path.join(_dir, 'data/raw')
+TRAIN_DIR = os.path.join(_dir, 'data/preprocessed')
+MODEL_PATH = os.path.join(_dir, 'autoencoder.h5')
+SUCCESSFILE = os.path.join(_dir, 'success.txt')
+FAILFILE = os.path.join(_dir, 'failed.txt')
+SKIPFILE = os.path.join(_dir, 'skip.txt')
 
 # computed configs
 def _find_start_stop(sr, min_hz, max_hz, nfft):
