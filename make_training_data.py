@@ -39,7 +39,7 @@ def _make_features(sr, audio):
         clip = audio[clip_begin:clip_begin+window_length]
         feature = make_feature(clip, sr, cf.NFFT, cf.MIN_FQ_BIN, cf.MAX_FQ_BIN)
         _validate_features(feature)
-        output.append((feature, clip_begin // sr)
+        output.append((feature, clip_begin // sr))
     return output
 
 def create_training_data(files):
