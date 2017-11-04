@@ -1,5 +1,6 @@
 import keras.models
 from keras.models import Model
+import numpy as np
 
 
 class AutoEncoder:
@@ -23,7 +24,12 @@ class AutoEncoder:
         return self._model.predict(X, *args, **kwargs)
 
     def encode(self, X, *args, **kwargs):
-        return self._encoder.predict(X, *args, **kwargs)
+        preds = self._encoder.predict(X, *args, **kwargs)
+        # experimental results showed that binary codes were learned
+        # without fine tuning. however to be really generic we shouldn't
+        # round the predictions here. instead we should finetune the model
+        # to learn binary features
+        return np.round(preds).astype(np.int64)
 
     @property
     def code_length(self):
