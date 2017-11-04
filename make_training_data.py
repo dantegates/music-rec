@@ -46,17 +46,14 @@ def create_training_data(files):
     successes = []
     failures = []
     success = skipped = 0
-    msg = report = ''
     ttl = len(files)
-    msg = '\r{remain} files remain. {complete} completed (success={s}, fail={f}). Currently processing {file}'
+    msg = '{remain} files remain. {complete} completed (success={s}, fail={f}). Currently processing {file}'
     for file in files:
         n_processed = success + skipped
         try:
-            print('\r', ' ' * len(report), end='', flush=True)
-            report = msg.format(
-                remain=ttl - n_processed, complete=n_processed, s=success,
-                f=skipped, file=os.path.basename(file))
-            print(report, end='', flush=True)
+            utils.rprint(msg, remain=ttl - n_processed,
+                         complete=n_processed, s=success,
+                         f=skipped, file=os.path.basename(file))
             _create_training_data(file)
         except (utils.UnreadableMP3Error, InvalidSampleRateError, Exception) as err:
             skipped += 1
