@@ -15,7 +15,7 @@ class InvalidFeatureError(ValueError): pass
 
 def make_feature(audio, sr, nfft, min_fq_bin=0, max_fq_bin=-1):
     *_, Sxx = scipy.signal.spectrogram(audio, sr, nfft=cf.NFFT)
-    X = Sxx[min_fq_bin:max_fq_bin].mean(axis=1)
+    X = Sxx[min_fq_bin:max_fq_bin].sum(axis=1)
     mn, mx = X.min(), X.max()
     # be careful to handle divide by zero errors here
     if mn != mx:
