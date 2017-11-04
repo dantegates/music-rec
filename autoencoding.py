@@ -24,3 +24,8 @@ class AutoEncoder:
 
     def encode(self, X, *args, **kwargs):
         return self._encoder.predict(X, *args, **kwargs)
+
+    @property
+    def code_length(self):
+        return self._encoder.output_shape[1]
+    
