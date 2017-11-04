@@ -77,3 +77,17 @@ def get_meta_data(f):
         pass
     artist, album, track = info['artist'], info['album'], info['title']
     return MetaData(artist, album, track)
+
+
+class _Printer:
+    last = ''
+    console_width = os.get_terminal_size().columns
+    @classmethod
+    def rprint(cls, text, **kwargs):
+        print('\r', ' ' * len(cls.last), end='', flush=True)
+        text = '\r%s' % text.format(**kwargs)
+        cls.last = text
+        print(text[:cls.console_width], end='', flush=True)
+
+
+rprint = _Printer.rprint
