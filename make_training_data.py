@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import scipy.io
+from sklearn.model_selection import train_test_split
 
 import config as cf
 import utils
@@ -42,7 +43,7 @@ def _make_features(sr, audio):
         output.append((feature, clip_begin // sr))
     return output
 
-def create_training_data(files):
+def create_training_data(files, output_dir):
     successes = []
     failures = []
     success = skipped = 0
@@ -54,7 +55,7 @@ def create_training_data(files):
             utils.rprint(msg, remain=ttl - n_processed,
                          complete=n_processed, s=success,
                          f=skipped, file=os.path.basename(file))
-            _create_training_data(file)
+            _create_training_data(file, output_dir)
         except (utils.UnreadableMP3Error, InvalidSampleRateError, Exception) as err:
             skipped += 1
             failures.append((file, err))
@@ -73,7 +74,7 @@ def create_training_data(files):
             with open(cf.SUCCESSFILE, 'a') as f:
                 f.write('%s\n' % file)
 
-def _create_training_data(file):
+def _create_training_data(file, output_dir):
     sr, audio = utils.read_audio(file, downmix=cf.DOWNMIX)
     if sr != cf.DESIRED_SAMPLE_RATE:
         raise InvalidSampleRateError('invalid sample rate: %s' % sr)
@@ -82,7 +83,7 @@ def _create_training_data(file):
     for feature, clip_begin in features:
         if feature.shape == cf.EXPECTED_SHAPE:
             saveto = '%s - %s sec.npy' % (basename, clip_begin)
-            saveto = os.path.join(cf.TRAIN_DIR, saveto)
+            saveto = os.path.join(output_dir, saveto)
             np.save(saveto, feature)
         else:
             raise InvalidShapeError('Unexpected feature shape: %s != %s'
@@ -103,7 +104,9 @@ def main():
     print('found %s files total' % len(cf.FILES))
     files = _filter_input_files(cf.FILES)
     print('processing %s files' % len(files))
-    create_training_data(files)
+    train, test = train_test_split(files, test_size=0.2, random_state=0)
+    create_training_data(train, cf.TRAIN_DIR)
+    create_training_data(test, cf.TEST_DIR)
 
 
 if __name__ == '__main__':

@@ -3,7 +3,6 @@ import os
 import shutil
 
 import numpy as np
-from sklearn.model_selection import train_test_split
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
@@ -14,8 +13,8 @@ import config as cf
 batch_size = 125
 epochs = 25
 
-files = [os.path.join(cf.TRAIN_DIR, f) for f in os.listdir(cf.TRAIN_DIR)]
-train, test = train_test_split(files, test_size=0.2, random_state=0)
+train = [os.path.join(cf.TRAIN_DIR, f) for f in os.listdir(cf.TRAIN_DIR)]
+test = [os.path.join(cf.TEST_DIR, f) for f in os.listdir(cf.TEST_DIR)]
 train_size = len(train)
 test_size = len(test)
 train_steps = int(train_size / batch_size)
