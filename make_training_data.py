@@ -102,9 +102,10 @@ def _filter_input_files(files):
 def main():
     utils.init_fs()
     print('found %s files total' % len(cf.FILES))
-    files = _filter_input_files(cf.FILES)
+    train, test = train_test_split(cf.FILES, test_size=0.2, random_state=0)
+    train = _filter_input_files(train)
+    test = _filter_input_files(test)
     print('processing %s files' % len(files))
-    train, test = train_test_split(files, test_size=0.2, random_state=0)
     create_training_data(train, cf.TRAIN_DIR)
     create_training_data(test, cf.TEST_DIR)
 
