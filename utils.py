@@ -38,7 +38,7 @@ def _mp3_hook(f):
     try:
         audio_segment = pydub.AudioSegment.from_mp3(f)
     except (OSError, pydub.exceptions.CouldntDecodeError) as err:
-        raise UnreadableMP3Error('could not read mp3') from err
+        raise UnreadableMP3Error('could not read mp3: %s' % err)
     byte_stream = io.BytesIO()
     audio_segment.export(byte_stream, 'wav')
     byte_stream.seek(0)
@@ -81,10 +81,10 @@ def get_meta_data(f):
 
 class _Printer:
     last = ''
-    console_width = os.get_terminal_size().columns
+    console_width = os.get_terminal_size().columns - 1
     @classmethod
     def rprint(cls, text, **kwargs):
-        print('\r', ' ' * len(cls.last), end='', flush=True)
+        print('\r', ' ' * min(cls.console_width, len(cls.last)), end='', flush=True)
         text = '\r%s' % text.format(**kwargs)
         cls.last = text
         print(text[:cls.console_width], end='', flush=True)
