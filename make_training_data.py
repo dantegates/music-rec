@@ -16,15 +16,7 @@ class InvalidFeatureError(ValueError): pass
 
 def make_feature(audio, sr, nfft, min_fq_bin=0, max_fq_bin=-1):
     *_, Sxx = scipy.signal.spectrogram(audio, sr, nfft=cf.NFFT)
-    X = Sxx[min_fq_bin:max_fq_bin].sum(axis=1)
-    mn, mx = X.min(), X.max()
-    # be careful to handle divide by zero errors here
-    if mn != mx:
-        X = (X - mn) / (mx - mn)
-    elif mx != 0:
-        X = X / mx
-    else:
-        X = X
+    X = Sxx[min_fq_bin:max_fq_bin, :]
     return X
 
 def _validate_features(arr):
@@ -76,18 +68,18 @@ def create_training_data(files, output_dir):
 
 def _create_training_data(file, output_dir):
     sr, audio = utils.read_audio(file, downmix=cf.DOWNMIX)
-    if sr != cf.DESIRED_SAMPLE_RATE:
-        raise InvalidSampleRateError('invalid sample rate: %s' % sr)
+#    if sr != cf.DESIRED_SAMPLE_RATE:
+#        raise InvalidSampleRateError('invalid sample rate: %s' % sr)
     features = _make_features(sr, audio)
     basename = os.path.basename(file)
     for feature, clip_begin in features:
-        if feature.shape == cf.EXPECTED_SHAPE:
-            saveto = '%s - %s sec.npy' % (basename, clip_begin)
-            saveto = os.path.join(output_dir, saveto)
-            np.save(saveto, feature)
-        else:
-            raise InvalidShapeError('Unexpected feature shape: %s != %s'
-                                    % (feature.shape, cf.EXPECTED_SHAPE))
+#        if feature.shape == cf.EXPECTED_SHAPE:
+        saveto = '%s - %s sec.npy' % (basename, clip_begin)
+        saveto = os.path.join(output_dir, saveto)
+        np.save(saveto, feature)
+#        else:
+#            raise InvalidShapeError('Unexpected feature shape: %s != %s'
+#                                    % (feature.shape, cf.EXPECTED_SHAPE))
 
 def _filter_input_files(files):
     skip = set()
@@ -105,7 +97,7 @@ def main():
     train, test = train_test_split(cf.FILES, test_size=0.2, random_state=0)
     train = _filter_input_files(train)
     test = _filter_input_files(test)
-    print('processing %s files' % len(files))
+    print('processing %s files' % (len(train) + len(test)))
     create_training_data(train, cf.TRAIN_DIR)
     create_training_data(test, cf.TEST_DIR)
 
