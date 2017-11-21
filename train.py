@@ -21,11 +21,17 @@ train_steps = int(train_size / batch_size)
 val_steps = int(test_size / batch_size)
 
 
+def load(f, time_samples):
+    X = np.load(f)
+    y = X.shape[1]
+    return np.add.reduceat(X, list(range(0, y, y // time_samples)), axis=1)
+
+
 def batch_gen(filenames, n_features=cf.EXPECTED_SHAPE[0], batch_size=30):
     batch = np.zeros((batch_size, n_features))
     for i, f in enumerate(filenames, start=1):
         i = i % batch_size
-        arr = np.load(f)
+        arr = load(f)
         batch[i-1, :] = arr
         if i % batch_size == 0:
             batch *= 2000
