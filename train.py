@@ -11,44 +11,42 @@ import config as cf
 
 
 batch_size = 125
-epochs = 25
+epochs = 50
 
-train = [os.path.join(cf.TRAIN_DIR, f) for f in os.listdir(cf.TRAIN_DIR)]
-test = [os.path.join(cf.TEST_DIR, f) for f in os.listdir(cf.TEST_DIR)]
-train_size = len(train)
-test_size = len(test)
+train_files = [os.path.join(cf.TRAIN_PROC_DIR, f) for f in os.listdir(cf.TRAIN_PROC_DIR)]
+test_files = [os.path.join(cf.TEST_PROC_DIR, f) for f in os.listdir(cf.TEST_PROC_DIR)]
+train_size = len(train_files)
+test_size = len(test_files)
 train_steps = int(train_size / batch_size)
 val_steps = int(test_size / batch_size)
+TIME_SAMPLES = 9
+SIZE = cf.EXPECTED_SHAPE[0] * (TIME_SAMPLES + 1)
 
 
-def load(f, time_samples):
-    X = np.load(f)
-    y = X.shape[1]
-    return np.add.reduceat(X, list(range(0, y, y // time_samples)), axis=1)
-
-
-def batch_gen(filenames, n_features=cf.EXPECTED_SHAPE[0], batch_size=30):
-    batch = np.zeros((batch_size, n_features))
+def batch_gen(filenames, n_features, batch_size=30):
     for i, f in enumerate(filenames, start=1):
-        i = i % batch_size
-        arr = load(f)
-        batch[i-1, :] = arr
-        if i % batch_size == 0:
-            batch *= 2000
-            yield batch, batch
+        if i % batch_size == 1:
             batch = np.zeros((batch_size, n_features))
+        arr = np.load(f)
+        j = (i % batch_size) - 1
+        batch[j, :] = arr
+        if i % batch_size == 0:
+             yield batch, batch
+
 
 def save_model(model):
     model.save(cf.MODEL_PATH)
 
 
-train_gen = batch_gen(itertools.cycle(train), cf.EXPECTED_SHAPE[0], batch_size)
-test_gen = batch_gen(itertools.cycle(test),  cf.EXPECTED_SHAPE[0], batch_size)
+train_gen = batch_gen(itertools.cycle(train_files), SIZE, batch_size)
+test_gen = batch_gen(itertools.cycle(test_files), SIZE, batch_size)
 
 
 def get_model():
     model = Sequential([
-        Dense(2**10, input_shape=cf.EXPECTED_SHAPE),
+        Dense(2**11, input_shape=(SIZE,)),
+        Activation('relu'),
+        Dense(2**10),
         Activation('relu'),
         Dense(2**9),
         Activation('relu'),
@@ -57,11 +55,7 @@ def get_model():
         Dense(2**7),
         Activation('relu'),
         Dense(2**6),
-        Activation('relu'),
-        Dense(2**5),
         Activation('sigmoid'),
-        Dense(2**6),
-        Activation('relu'),
         Dense(2**7),
         Activation('relu'),
         Dense(2**8),
@@ -70,7 +64,9 @@ def get_model():
         Activation('relu'),
         Dense(2**10),
         Activation('relu'),
-        Dense(cf.EXPECTED_SHAPE[0]),
+        Dense(2**11),
+        Activation('relu'),
+        Dense(SIZE),
         Activation('relu')
     ])
     model.compile(optimizer='adadelta', loss='mean_squared_error')
@@ -78,21 +74,23 @@ def get_model():
 
 def main():
     save = False
-    load_model = input('use loaded model? (y/n):') == 'y'
+    load_model = input('use loaded model? (y/n): ').lower() == 'y'
     if load_model:
-        ae = keras.models.load_model(cf.MODEL_PATH)
+        model = keras.models.load_model(cf.MODEL_PATH)
         shutil.copy(cf.MODEL_PATH, cf.MODEL_PATH + '.bak')
     else:
-        ae = get_model()
+        model = get_model()
+    print(model.summary())
     try:
-        ae.fit_generator(train_gen, train_steps, validation_data=test_gen,
-                         validation_steps=val_steps, epochs=epochs)
+        model.fit_generator(train_gen, train_steps,
+                            validation_data=test_gen, validation_steps=val_steps,
+                            epochs=epochs)
     except KeyboardInterrupt:
-        save = input('save model? (y/n):') == 'y'
+        save = input('save model? (y/n):' ).lower() == 'y'
     else:
         save = True
     if save:
-        ae.save(cf.MODEL_PATH)
+        model.save(cf.MODEL_PATH)
 
 
 if __name__ == '__main__':
