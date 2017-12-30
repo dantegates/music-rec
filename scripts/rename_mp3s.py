@@ -43,8 +43,12 @@ def main(root_dir, output_dir):
     logger.info('found %s files' % len(files))
     for f in files:
         try:
-            metadata = get_meta_data(f)
-            pathname = rename(metadata)
+            try:
+                metadata = get_meta_data(f)
+                pathname = rename(metadata)
+            except CouldNotReadMetaData:
+                if not 'ipod' in f.lower():
+                    pathname = '-'.join(f.replace(root_dir, '').split(os.path.sep))
             dst = os.path.join(output_dir, pathname)
             shutil.move(f, dst)
             logger.info('moved %s to %s' % (f, dst))
