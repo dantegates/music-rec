@@ -12,15 +12,20 @@ def getsize(f):
 
 
 class Printer:
-    last = ''
-    console_width = os.get_terminal_size().columns - 1
+    try:
+        last = ''
+        console_width = os.get_terminal_size().columns - 1
 
-    @classmethod
-    def refresh_print(cls, text, **kwargs):
-        print('\r', ' ' * min(cls.console_width, len(cls.last)), end='', flush=True)
-        text = '\r%s' % text.format(**kwargs)
-        cls.last = text
-        print(text[:cls.console_width], end='', flush=True)
+        @classmethod
+        def refresh_print(cls, text, **kwargs):
+            print('\r', ' ' * min(cls.console_width, len(cls.last)), end='', flush=True)
+            text = '\r%s' % text.format(**kwargs)
+            cls.last = text
+            print(text[:cls.console_width], end='', flush=True)
+    except OSError:
+        @classmethod
+        def refresh_print(cls, *args, **kwargs):
+            pass
 
 
 refresh_print = Printer.refresh_print

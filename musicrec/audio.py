@@ -1,5 +1,10 @@
+import collections
+import io
+
 import numpy as np
 import pydub
+import scipy
+import scipy.signal
 import scipy.io.wavfile
 
 
@@ -59,3 +64,8 @@ def get_meta_data(f):
     except Exception as err:
         raise MP3Error('could not read metadata: %s' % f) from err
     return MetaData(artist, album, track)
+
+
+def spectrogram(audio, sr, nfft):
+    f, t, Sxx = scipy.signal.spectrogram(audio, sr, nfft=nfft)
+    return f, t, Sxx
