@@ -66,6 +66,7 @@ def get_meta_data(f):
     return MetaData(artist, album, track)
 
 
-def spectrogram(audio, sr, nfft):
-    f, t, Sxx = scipy.signal.spectrogram(audio, sr, nfft=nfft)
+def spectrogram(audio, sr, *, nfft, nperseg, noverlap):
+    f, t, Sxx = scipy.signal.spectrogram(
+        audio, sr, nfft=nfft, nperseg=nperseg, noverlap=noverlap)
     return f, t, Sxx
