@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 
 import config as cf
 import utils
+from musicrec.audio import spectrogram
 
 
 class InvalidSampleRateError(ValueError): pass
@@ -15,9 +16,10 @@ class InvalidFeatureError(ValueError): pass
     
 
 def make_feature(audio, sr, nfft, min_fq_bin=0, max_fq_bin=-1):
-    *_, Sxx = scipy.signal.spectrogram(audio, sr, nfft=cf.NFFT)
+    Sxx = spectrogram(audio, sr, nfft)
     X = Sxx[min_fq_bin:max_fq_bin, :]
     return X
+
 
 def _validate_features(arr):
     if not (arr >= 0).all() and (arr <= 1).all():
