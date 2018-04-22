@@ -67,7 +67,7 @@ def process_audio(sr, audio, *, nfft, nperseg, noverlap):
 
 
 def save_feature(X, filename):
-    np.save(filename, X)
+    np.savez_compressed(filename, X)
 
 
 def _main(file):
@@ -78,9 +78,9 @@ def _main(file):
         for sec, sample in samples:
             feature = process_audio(sr, sample, nfft=NFFT, nperseg=NPERSEG, noverlap=NOVERLAP)
             feature_id = '%s - %s' % (os.path.basename(file), sec)
-            f_out = os.path.join(OUTPUT_DIR, '%s.npy' % feature_id)
+            f_out = os.path.join(OUTPUT_DIR, '%s.npz' % feature_id)
             save_feature(feature, f_out)
-            logger.info('completed: %s' % file)
+        logger.info('completed: %s' % file)
     else:
         logger.info('skipped: %s' % file)
 
